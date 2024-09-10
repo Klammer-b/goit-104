@@ -1,3 +1,3 @@
-const greeting = 'Hello world';
+import { startServer } from './server.js';
 
-console.log(greeting);
+startServer();
