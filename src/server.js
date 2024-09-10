@@ -1,18 +1,15 @@
-import http from 'http';
+import express from 'express';
 
-const server = http.createServer((request, response) => {
-  const { url } = request;
+const PORT = 3000;
 
-  if (url === '/') {
-    response.write('Home page');
-  } else if (url === '/contacts') {
-    response.write('Contacts page');
-  } else {
-    response.write('Not found');
-  }
-  response.end();
+const app = express();
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Hello, World!',
+  });
 });
 
-server.listen(3000, () => {
-  console.log('Server started');
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
