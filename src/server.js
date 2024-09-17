@@ -26,7 +26,7 @@ export const startServer = () => {
 
   app.get('/', (req, res) => {
     res.json({
-      message: 'Hello, World!',
+      message: 'Hello world',
     });
   });
 
