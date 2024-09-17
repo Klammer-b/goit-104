@@ -18,6 +18,8 @@ export const startServer = () => {
     }),
   );
 
+  app.use('/', (req, res) => res.send());
+
   app.use(cors());
 
   app.use(router);
