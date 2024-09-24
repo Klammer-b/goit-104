@@ -1,40 +1,39 @@
 import express from 'express';
-import pino from 'pino-http';
+// import pino from 'pino-http';
 import cors from 'cors';
 import { env } from './utils/env.js';
 import { ENV_VARS } from './constants/index.js';
-import {
-  notFoundMiddleware,
-  errorHandlerMiddleware,
-} from './middlewares/index.js';
-
-const PORT = Number(env(ENV_VARS.PORT, '3000'));
+import { notFoundAnythingMiddleware } from './middlewares/notFound.js';
+import { errorHandlerMiddleware } from './middlewares/errorHandler.js';
+import router from './routers/index.js';
 
 export const startServer = () => {
   const app = express();
 
-  app.use(express.json());
+  // app.use(
+  //   pino({
+  //     transport: {
+  //       target: 'pino-pretty',
+  //     },
+  //   }),
+  // );
+
   app.use(cors());
 
   app.use(
-    pino({
-      transport: {
-        target: 'pino-pretty',
-      },
+    express.json({
+      type: ['application/json', 'application/vnd.api+json'],
     }),
   );
 
-  app.get('/', (req, res) => {
-    res.json({
-      message: 'Hello world',
-    });
-  });
+  app.use(router);
 
-  app.use(notFoundMiddleware);
+  app.use(notFoundAnythingMiddleware);
 
   app.use(errorHandlerMiddleware);
 
+  const PORT = env(ENV_VARS.PORT, 3000);
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}!`);
   });
 };
