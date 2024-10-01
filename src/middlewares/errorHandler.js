@@ -9,6 +9,17 @@ export const errorHandlerMiddleware = (err, req, res, next) => {
     });
   }
 
+  if (err.isJoi) {
+    return res.status(400).json({
+      message: 'Validation error occurred',
+      error: err.message,
+      details: err.details.map((error) => ({
+        message: error.message,
+        path: error.path,
+      })),
+    });
+  }
+
   if (err instanceof MongooseError) {
     return res.status(500).json({
       message: 'MongooseError',
