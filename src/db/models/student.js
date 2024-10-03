@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { User } from './user.js';
 
 const studentSchema = new Schema(
   {
@@ -7,6 +8,7 @@ const studentSchema = new Schema(
     gender: { type: String, required: true, enum: ['male', 'female', 'other'] },
     avgMark: { type: Number, required: true, min: 1, max: 12 },
     onDuty: { type: Boolean, default: false },
+    parentId: { type: Schema.ObjectId, required: true, ref: User },
   },
   { timestamps: true, versionKey: false },
 );

@@ -8,6 +8,13 @@ import {
 } from '../constants/time.js';
 import { Session } from '../db/models/session.js';
 
+const createSession = () => ({
+  accessToken: crypto.randomBytes(24).toString('base64'),
+  refreshToken: crypto.randomBytes(24).toString('base64'),
+  accessTokenValidUntil: new Date(Date.now() + ACCESS_TOKEN_LIVE_TIME),
+  refreshTokenValidUntil: new Date(Date.now() + REFRESH_TOKEN_LIVE_TIME),
+});
+
 const findUserByEmail = async (email) => await User.findOne({ email });
 
 export const registerUser = async (payload) => {
@@ -39,13 +46,42 @@ export const loginUser = async (payload) => {
     throw createHttpError(401, 'User email or password is incorrect!');
   }
 
+  await Session.deleteOne({ userId: user._id });
+
   const session = await Session.create({
     userId: user._id,
-    accessToken: crypto.randomBytes(16).toString('base64'),
-    refreshToken: crypto.randomBytes(16).toString('base64'),
-    accessTokenValidUntil: new Date(Date.now() + ACCESS_TOKEN_LIVE_TIME),
-    refreshTokenValidUntil: new Date(Date.now() + REFRESH_TOKEN_LIVE_TIME),
+    ...createSession(),
   });
 
   return session;
+};
+
+export const logoutUser = async (sessionId, sessionToken) => {
+  await Session.deleteOne({ _id: sessionId, refreshToken: sessionToken });
+};
+
+export const refreshSession = async (sessionId, sessionToken) => {
+  const session = await Session.findOne({
+    _id: sessionId,
+    refreshToken: sessionToken,
+  });
+
+  if (!session) {
+    throw createHttpError(401, 'Session not found');
+  }
+
+  const now = new Date();
+
+  if (session.refreshTokenValidUntil < now) {
+    throw createHttpError(401, 'Refresh token expired');
+  }
+
+  await Session.deleteOne({ _id: sessionId, refreshToken: sessionToken });
+
+  const newSession = await Session.create({
+    userId: session.userId,
+    ...createSession(),
+  });
+
+  return newSession;
 };

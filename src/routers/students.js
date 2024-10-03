@@ -12,18 +12,30 @@ import { validateMongoIdParam } from '../middlewares/validateMongoIdParam.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { createStudentValidationSchema } from '../validation/createStudentValidationSchema.js';
 import { updateStudentValidationSchema } from '../validation/updateStudentValidationSchema.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { checkRoles } from '../middlewares/checkRoles.js';
 
 const studentsRouter = Router();
 
 studentsRouter.use('/:studentId', validateMongoIdParam('studentId'));
+studentsRouter.use('/', authenticate);
+
 // studentsRouter.use(
 //   '/:studentId/diary/:diaryId',
 //   validateMongoIdParam('diaryId'),
 // );
 
-studentsRouter.get('/', ctrlWrapper(getStudentsController));
+studentsRouter.get(
+  '/',
+  checkRoles('teacher'),
+  ctrlWrapper(getStudentsController),
+);
 
-studentsRouter.get('/:studentId', ctrlWrapper(getStudentByIdController));
+studentsRouter.get(
+  '/:studentId',
+  checkRoles('teacher', 'parent'),
+  ctrlWrapper(getStudentByIdController),
+);
 
 studentsRouter.post(
   '/',
@@ -42,6 +54,10 @@ studentsRouter.put(
   ctrlWrapper(putStudentController),
 );
 
-studentsRouter.delete('/:studentId', ctrlWrapper(deleteStudentByIdController));
+studentsRouter.delete(
+  '/:studentId',
+  checkRoles('teacher'),
+  ctrlWrapper(deleteStudentByIdController),
+);
 
 export default studentsRouter;
