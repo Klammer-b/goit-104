@@ -50,7 +50,7 @@ export const deleteStudentByIdController = async (req, res) => {
 };
 
 export const createStudentController = async (req, res) => {
-  const student = await createStudent(req.body);
+  const student = await createStudent(req.body, req.user._id);
 
   res.status(201).send({
     status: 201,

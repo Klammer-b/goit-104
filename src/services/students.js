@@ -66,8 +66,8 @@ export const getStudentById = async (id) => {
   return student;
 };
 
-export const createStudent = async (payload) => {
-  return await Student.create(payload);
+export const createStudent = async (payload, parentId) => {
+  return await Student.create({ ...payload, parentId });
 };
 
 export const updateStudent = async (id, payload, options = {}) => {
