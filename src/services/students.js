@@ -1,6 +1,7 @@
 import createHttpError from 'http-errors';
 import { Student } from '../db/models/student.js';
 import { createPaginationData } from '../utils/createPagination.js';
+import { saveImage } from '../utils/saveImage.js';
 
 export const getAllStudents = async ({
   page = 1,
@@ -70,12 +71,21 @@ export const createStudent = async (payload, parentId) => {
   return await Student.create({ ...payload, parentId });
 };
 
-export const updateStudent = async (id, payload, options = {}) => {
-  const rawResult = await Student.findByIdAndUpdate(id, payload, {
-    new: true,
-    includeResultMetadata: true,
-    ...options,
-  });
+export const updateStudent = async (id, { file, ...payload }, options = {}) => {
+  let avatarUrl = null;
+  if (file) {
+    avatarUrl = await saveImage(file);
+  }
+
+  const rawResult = await Student.findByIdAndUpdate(
+    id,
+    { ...payload, avatarUrl },
+    {
+      new: true,
+      includeResultMetadata: true,
+      ...options,
+    },
+  );
 
   if (!rawResult.value) {
     throw createHttpError(404, {

@@ -61,9 +61,9 @@ export const createStudentController = async (req, res) => {
 
 export const patchStudentController = async (req, res) => {
   const id = req.params.studentId;
-  const { body } = req;
+  const { body, file } = req;
 
-  const { student } = await updateStudent(id, body);
+  const { student } = await updateStudent(id, { ...body, file });
 
   res.send({
     status: 200,
