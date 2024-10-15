@@ -1,9 +1,11 @@
 import { ACCESS_TOKEN_LIVE_TIME } from '../constants/time.js';
 import {
+  getGoogleOauthLink,
   loginUser,
   logoutUser,
   refreshSession,
   registerUser,
+  verifyGoogleOauth,
 } from '../services/auth.js';
 import { serializeUser } from '../utils/serializeUser.js';
 
@@ -63,6 +65,28 @@ export const refreshUserSessionController = async (req, res) => {
   res.json({
     status: 200,
     message: 'Successfully refreshed a session!',
+    data: { accessToken: session.accessToken },
+  });
+};
+
+export const requestGoogleOauthUrlController = (req, res) => {
+  const link = getGoogleOauthLink();
+
+  res.json({
+    status: 200,
+    message: 'Successfully requested oauth link!',
+    data: { link },
+  });
+};
+
+export const verifyGoogleOauthController = async (req, res) => {
+  const session = await verifyGoogleOauth(req.body.code);
+
+  setupSessionCookies(session, res);
+
+  res.json({
+    status: 200,
+    message: 'Successfully logged in via Google OAuth!',
     data: { accessToken: session.accessToken },
   });
 };

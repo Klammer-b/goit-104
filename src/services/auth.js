@@ -1,12 +1,13 @@
 import createHttpError from 'http-errors';
 import bcrypt from 'bcrypt';
-import crypto from 'node:crypto';
+import crypto, { randomBytes } from 'node:crypto';
 import { User } from '../db/models/user.js';
 import {
   ACCESS_TOKEN_LIVE_TIME,
   REFRESH_TOKEN_LIVE_TIME,
 } from '../constants/time.js';
 import { Session } from '../db/models/session.js';
+import { generateOAuthLink, verifyCode } from '../utils/googleOAuth.js';
 
 const createSession = () => ({
   accessToken: crypto.randomBytes(24).toString('base64'),
@@ -84,4 +85,33 @@ export const refreshSession = async (sessionId, sessionToken) => {
   });
 
   return newSession;
+};
+
+export const getGoogleOauthLink = () => {
+  return generateOAuthLink();
+};
+
+export const verifyGoogleOauth = async (code) => {
+  const { name, email, picture } = await verifyCode(code);
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    const password = await bcrypt.hash(randomBytes(40), 10);
+    user = await User.create({
+      name,
+      email,
+      avatarUrl: picture,
+      password,
+    });
+  }
+
+  await Session.deleteOne({
+    userId: user._id,
+  });
+
+  return await Session.create({
+    userId: user._id,
+    ...createSession(),
+  });
 };
