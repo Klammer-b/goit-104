@@ -14,6 +14,7 @@ import { createStudentValidationSchema } from '../validation/createStudentValida
 import { updateStudentValidationSchema } from '../validation/updateStudentValidationSchema.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { checkRoles } from '../middlewares/checkRoles.js';
+import { upload } from '../middlewares/multer.js';
 
 const studentsRouter = Router();
 
@@ -44,6 +45,7 @@ studentsRouter.post(
 );
 studentsRouter.patch(
   '/:studentId',
+  upload.single('avatar'),
   validateBody(updateStudentValidationSchema),
   ctrlWrapper(patchStudentController),
 );
