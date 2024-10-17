@@ -1,6 +1,7 @@
 import createHttpError from 'http-errors';
 import bcrypt from 'bcrypt';
 import crypto, { randomBytes } from 'node:crypto';
+import jwt from 'jsonwebtoken';
 import { User } from '../db/models/user.js';
 import {
   ACCESS_TOKEN_LIVE_TIME,
@@ -8,6 +9,10 @@ import {
 } from '../constants/time.js';
 import { Session } from '../db/models/session.js';
 import { generateOAuthLink, verifyCode } from '../utils/googleOAuth.js';
+import { emailClient } from '../utils/emailClient.js';
+import { ENV_VARS } from '../constants/index.js';
+import { env } from '../utils/env.js';
+import { generateResetPasswordEmail } from '../utils/generateResetPaswordEmail.js';
 
 const createSession = () => ({
   accessToken: crypto.randomBytes(24).toString('base64'),
@@ -114,4 +119,59 @@ export const verifyGoogleOauth = async (code) => {
     userId: user._id,
     ...createSession(),
   });
+};
+export const sendResetPasswordToken = async (email) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const resetToken = jwt.sign(
+    {
+      sub: user._id,
+      email,
+    },
+    env(ENV_VARS.JWT_SECRET),
+    {
+      expiresIn: 60 * 15, //15 minutes,
+    },
+  );
+
+  const resetLink = `${env(
+    ENV_VARS.FRONTEND_DOMAIN,
+  )}/auth/reset-password?token=${resetToken}`;
+
+  try {
+    await emailClient.sendMail({
+      to: email,
+      from: env(ENV_VARS.SMTP_FROM),
+      html: generateResetPasswordEmail({
+        name: user.name,
+        resetLink: resetLink,
+      }),
+      subject: 'Reset your password!',
+    });
+  } catch (err) {
+    console.log(err);
+    throw createHttpError(500, 'Error in sending email');
+  }
+};
+
+export const resetPassword = async ({ token, password }) => {
+  let payload;
+  try {
+    payload = jwt.verify(token, env(ENV_VARS.JWT_SECRET));
+  } catch (err) {
+    throw createHttpError(401, err.message);
+  }
+  const user = await User.findById(payload.sub);
+
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 };

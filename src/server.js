@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'node:path';
 // import pino from 'pino-http';
 import cors from 'cors';
 import { env } from './utils/env.js';
@@ -7,6 +8,7 @@ import { notFoundAnythingMiddleware } from './middlewares/notFound.js';
 import { errorHandlerMiddleware } from './middlewares/errorHandler.js';
 import router from './routers/index.js';
 import cookieParser from 'cookie-parser';
+import { UPLOAD_PATH } from './constants/path.js';
 
 export const startServer = () => {
   const app = express();
@@ -30,6 +32,8 @@ export const startServer = () => {
   );
 
   app.use(router);
+
+  app.use('/files', express.static(path.join(UPLOAD_PATH, 'images')));
 
   app.use(notFoundAnythingMiddleware);
 

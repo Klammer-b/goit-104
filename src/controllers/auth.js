@@ -6,6 +6,8 @@ import {
   refreshSession,
   registerUser,
   verifyGoogleOauth,
+  resetPassword,
+  sendResetPasswordToken,
 } from '../services/auth.js';
 import { serializeUser } from '../utils/serializeUser.js';
 
@@ -88,5 +90,23 @@ export const verifyGoogleOauthController = async (req, res) => {
     status: 200,
     message: 'Successfully logged in via Google OAuth!',
     data: { accessToken: session.accessToken },
+  });
+};
+
+export const requestResetPasswordTokenController = async (req, res) => {
+  await sendResetPasswordToken(req.body.email);
+
+  res.json({
+    status: 200,
+    message: 'Reset email was sent!',
+  });
+};
+
+export const resetPasswordController = async (req, res) => {
+  await resetPassword(req.body);
+
+  res.json({
+    status: 200,
+    message: 'Password was reset!',
   });
 };
