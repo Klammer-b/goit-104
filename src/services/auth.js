@@ -1,13 +1,14 @@
 import createHttpError from 'http-errors';
 import bcrypt from 'bcrypt';
+import crypto, { randomBytes } from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import crypto from 'node:crypto';
 import { User } from '../db/models/user.js';
 import {
   ACCESS_TOKEN_LIVE_TIME,
   REFRESH_TOKEN_LIVE_TIME,
 } from '../constants/time.js';
 import { Session } from '../db/models/session.js';
+import { generateOAuthLink, verifyCode } from '../utils/googleOAuth.js';
 import { emailClient } from '../utils/emailClient.js';
 import { ENV_VARS } from '../constants/index.js';
 import { env } from '../utils/env.js';
@@ -91,6 +92,34 @@ export const refreshSession = async (sessionId, sessionToken) => {
   return newSession;
 };
 
+export const getGoogleOauthLink = () => {
+  return generateOAuthLink();
+};
+
+export const verifyGoogleOauth = async (code) => {
+  const { name, email, picture } = await verifyCode(code);
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    const password = await bcrypt.hash(randomBytes(40), 10);
+    user = await User.create({
+      name,
+      email,
+      avatarUrl: picture,
+      password,
+    });
+  }
+
+  await Session.deleteOne({
+    userId: user._id,
+  });
+
+  return await Session.create({
+    userId: user._id,
+    ...createSession(),
+  });
+};
 export const sendResetPasswordToken = async (email) => {
   const user = await User.findOne({ email });
 

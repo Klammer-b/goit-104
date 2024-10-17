@@ -5,12 +5,15 @@ import {
   logoutUserController,
   refreshUserSessionController,
   registerUserController,
+  requestGoogleOauthUrlController,
+  verifyGoogleOauthController,
   requestResetPasswordTokenController,
   resetPasswordController,
 } from '../controllers/auth.js';
 import { registerUserValidationSchema } from '../validation/registerUserValidationSchema.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { loginUserValidationSchema } from '../validation/loginUserValidationSchema.js';
+import { verifyGoogleOauthValidationSchema } from '../validation/verifyGoogleOauthValidationSchema.js';
 import { requestResetPasswordTokenValidationSchema } from '../validation/requestResetPasswordTokenSchema.js';
 import { resetPasswordValidationSchema } from '../validation/resetPasswordValidationSchema.js';
 
@@ -28,6 +31,16 @@ authRouter.post(
 );
 authRouter.post('/logout', ctrlWrapper(logoutUserController));
 authRouter.post('/refresh-session', ctrlWrapper(refreshUserSessionController));
+
+authRouter.post(
+  '/request-google-oauth-link',
+  ctrlWrapper(requestGoogleOauthUrlController),
+);
+authRouter.post(
+  '/verify-oauth',
+  validateBody(verifyGoogleOauthValidationSchema),
+  ctrlWrapper(verifyGoogleOauthController),
+);
 
 authRouter.post(
   '/request-reset-password-token',
