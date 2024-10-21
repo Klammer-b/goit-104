@@ -9,6 +9,7 @@ import { errorHandlerMiddleware } from './middlewares/errorHandler.js';
 import router from './routers/index.js';
 import cookieParser from 'cookie-parser';
 import { UPLOAD_PATH } from './constants/path.js';
+import { swaggerDocs } from './middlewares/swaggerDocs.js';
 
 export const startServer = () => {
   const app = express();
@@ -32,6 +33,8 @@ export const startServer = () => {
   );
 
   app.use(router);
+
+  app.use('/api-docs', swaggerDocs());
 
   app.use('/files', express.static(path.join(UPLOAD_PATH, 'images')));
 
